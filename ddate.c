@@ -149,6 +149,8 @@ void print(struct disc_time,char **); /* old */
 /* read a fortune file */
 int load_fortunes(char *fn, char *delim, char** result);
 
+#ifndef DDATE_NO_MAIN
+
 int
 main (int argc, char *argv[]) {
     long t;
@@ -210,6 +212,8 @@ main (int argc, char *argv[]) {
    
     return 0;
 }
+
+#endif
 
 void disc_format(char *buf, const char* fmt, struct disc_time dt)
 {
