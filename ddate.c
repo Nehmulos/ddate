@@ -75,6 +75,8 @@
 #include <time.h>
 #include <stdio.h>
 
+#include "ddate.h"
+
 
 // work around includes and defines from formerly c.h
 #ifndef ARRAY_SIZE
@@ -98,36 +100,6 @@
 #ifdef KILL_BOB
 int xday_countdown(int yday, int year);
 #endif
-
-
-/* string constants */
-
-char *day_long[5] = { 
-    "Sweetmorn", "Boomtime", "Pungenday", "Prickle-Prickle", "Setting Orange"
-};
-
-char *day_short[5] = {"SM","BT","PD","PP","SO"};
-
-char *season_long[5] = { 
-    "Chaos", "Discord", "Confusion", "Bureaucracy", "The Aftermath"
-};
-
-char *season_short[5] = {"Chs", "Dsc", "Cfn", "Bcy", "Afm"};
-
-char *holyday[5][2] = { 
-    { "Mungday", "Chaoflux" },
-    { "Mojoday", "Discoflux" },
-    { "Syaday",  "Confuflux" },
-    { "Zaraday", "Bureflux" },
-    { "Maladay", "Afflux" }
-};
-
-struct disc_time {
-    int season; /* 0-4 */
-    int day; /* 0-72 */
-    int yday; /* 0-365 */
-    int year; /* 3066- */
-};
 
 char *excl[] = {
     "Hail Eris!", "All Hail Discordia!", "Kallisti!", "Fnord.", "Or not.",
@@ -174,12 +146,8 @@ static inline char *sel(char **strings, int num) {
 }
 
 void print(struct disc_time,char **); /* old */
-void format(char *buf, const char* fmt, struct disc_time dt);
 /* read a fortune file */
 int load_fortunes(char *fn, char *delim, char** result);
-
-struct disc_time convert(int,int);
-struct disc_time makeday(int,int,int);
 
 int
 main (int argc, char *argv[]) {
@@ -213,7 +181,7 @@ main (int argc, char *argv[]) {
   thud:
     if (argc-pi==3){ 
 	int moe=atoi(argv[pi]), larry=atoi(argv[pi+1]), curly=atoi(argv[pi+2]);
-	hastur=makeday(
+    hastur=disc_makeday(
 #ifdef US_FORMAT
 	    moe,larry,
 #else
@@ -234,22 +202,22 @@ main (int argc, char *argv[]) {
 	eris=localtime(&t);
 	bob=eris->tm_yday; /* days since Jan 1. */
 	raw=eris->tm_year; /* years since 1980 */
-	hastur=convert(bob,raw);
+    hastur=disc_convert(bob,raw);
 	fnord=fnord?fnord:default_immediate_fmt;
     }
-    format(schwa, fnord, hastur);
+    disc_format(schwa, fnord, hastur);
     printf("%s\n", schwa);
    
     return 0;
 }
 
-void format(char *buf, const char* fmt, struct disc_time dt)
+void disc_format(char *buf, const char* fmt, struct disc_time dt)
 {
     int tib_start=-1, tib_end=0;
     int i, fmtlen=strlen(fmt);
     char *bufptr=buf;
 
-/*    fprintf(stderr, "format(%p, \"%s\", dt)\n", buf, fmt);*/
+/*    fprintf(stderr, "disc_format(%p, \"%s\", dt)\n", buf, fmt);*/
 
     /* first, find extents of St. Tib's Day area, if defined */
     for(i=0; i<fmtlen; i++) {
@@ -281,15 +249,15 @@ void format(char *buf, const char* fmt, struct disc_time dt)
 	    if(fmt[i]=='%') {
 		char *wibble=0, snarf[23];
 		switch(fmt[++i]) {
-		case 'A': wibble=day_long[dt.yday%5]; break;
-		case 'a': wibble=day_short[dt.yday%5]; break;
-		case 'B': wibble=season_long[dt.season]; break;
-		case 'b': wibble=season_short[dt.season]; break;
+        case 'A': wibble=disc_day_long[dt.yday%5]; break;
+        case 'a': wibble=disc_day_short[dt.yday%5]; break;
+        case 'B': wibble=disc_season_long[dt.season]; break;
+        case 'b': wibble=disc_season_short[dt.season]; break;
 		case 'd': sprintf(snarf, "%d", dt.day+1); wibble=snarf; break;
 		case 'e': sprintf(snarf, "%d%s", dt.day+1, ending(dt.day+1)); 
 		    wibble=snarf; break;
 		case 'H': if(dt.day==4||dt.day==49)
-		    wibble=holyday[dt.season][dt.day==49]; break;
+            wibble=disc_holyday[dt.season][dt.day==49]; break;
 		case 'N': if(dt.day!=4&&dt.day!=49) goto eschaton; break;
 		case 'n': *(bufptr++)='\n'; break;
 		case 't': *(bufptr++)='\t'; break;
@@ -316,7 +284,7 @@ void format(char *buf, const char* fmt, struct disc_time dt)
     *(bufptr)=0;
 }
 
-struct disc_time makeday(int imonth,int iday,int iyear) /*i for input */
+struct disc_time disc_makeday(int imonth,int iday,int iyear) /*i for input */
 { 
     struct disc_time funkychickens;
     
@@ -356,7 +324,7 @@ struct disc_time makeday(int imonth,int iday,int iyear) /*i for input */
     return funkychickens;
 }
 
-struct disc_time convert(int nday, int nyear)
+struct disc_time disc_convert(int nday, int nyear)
 {  struct disc_time funkychickens;
    
    funkychickens.year = nyear+3066;
